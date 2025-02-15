@@ -1,0 +1,54 @@
+try {
+    // Ensure TEmpID is set in the URL
+    $id = isset($_GET["TEmpID"]) ? $_GET["TEmpID"] : null;
+    if (!$id) {
+        throw new Exception("TEmpID is missing from the URL.");
+    }
+
+    // Fetch Employee Data
+    $stmt = $conn->prepare("SELECT * FROM employee WHERE TEmpID = ?");
+    if (!$stmt) {
+        die("Error preparing SELECT statement: " . $conn->error);
+    }
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        throw new Exception("Record not found for TEmpID = " . htmlspecialchars($id));
+    }
+    $todo = $result->fetch_assoc();
+    $stmt->close();
+
+    //get the value of the form 
+    if ($_SERVER['REQUEST_METHOD'] === "POST") {
+        $Fname = $_POST["fname"] ?? "";
+        $Mname = $_POST["mname"] ?? "";
+        $Lname = $_POST["lname"] ?? "";
+        $Dept = $_POST["D_id"] ?? "";
+        $Rcode = $_POST["rankcode"] ?? "";
+
+        // need to complete fill-up the request of the update form
+        if (!$Fname || !$Lname || !$Dept || !$Rcode) {
+            throw new Exception("All fields must be filled!");
+        }
+
+        // Update Query
+        $updateStmt = $conn->prepare("UPDATE employee SET Tfn = ?, Tmn = ?, Tln = ?, TdeptID = ?, Trankcode = ? WHERE TEmpID = ?");
+        if (!$updateStmt) {
+            die("Error preparing UPDATE statement: " . $conn->error);
+        }
+        $updateStmt->bind_param("sssssi", $Fname, $Mname, $Lname, $Dept, $Rcode, $id);
+
+        if ($updateStmt->execute()) {
+            header("Location: viewRecord.php");
+            exit;
+        } else {
+            echo "Update failed: " . $updateStmt->error;
+        }
+        $updateStmt->close();
+    }
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
+?>
