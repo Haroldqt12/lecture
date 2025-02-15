@@ -1,0 +1,8 @@
+
+//if ID is Undefined try this
+
+$id = isset($_GET["TEmpID"]) ? $_GET["TEmpID"] : null;
+if (!$id) {
+    die("Error: TEmpID is missing from the URL.");
+}
+
